@@ -10,7 +10,7 @@ from agents.agent import Agent
 from utils import MaxSizeList
 
 
-class FullyConnectedDeepQLearningAgent(Agent):
+class DQLDense(Agent):
     def __init__(
             self,
             name,
@@ -21,11 +21,12 @@ class FullyConnectedDeepQLearningAgent(Agent):
             exploration_rate=1,
             exploration_rate_decay=0.001,
             exploration_rate_min=0.01,
-            memory_size=10000
+            memory_size=10000,
+            replay_sample_size=32
     ):
-
+        self.production = False
         self.name = name
-        self.model_path = 'models/{}.h5'.format(self.name)
+        self.model_path = 'models/{}-DQLDense.h5'.format(self.name)
         self.state_space = state_space
         self.action_space = action_space
 
@@ -37,18 +38,16 @@ class FullyConnectedDeepQLearningAgent(Agent):
         self.exploration_rate_min = exploration_rate_min
 
         self.memory = MaxSizeList(memory_size)
+        self.replay_sample_size = replay_sample_size
 
         if os.path.isfile(self.model_path):
             self.dqn = load_model(self.model_path)
         else:
             self.dqn = Sequential([
-                Dense(32, input_shape=self.state_space.shape),
+                Dense(24, input_shape=self.state_space.shape),
                 Activation('relu'),
 
-                Dense(32),
-                Activation('relu'),
-
-                Dense(32),
+                Dense(24),
                 Activation('relu'),
 
                 Dense(self.action_space.n),
@@ -58,10 +57,11 @@ class FullyConnectedDeepQLearningAgent(Agent):
             self.dqn.compile(loss='mse', optimizer='adam')
 
     def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))
+        if not self.production:
+            self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
-        if random.uniform(0, 1) > self.exploration_rate:
+        if self.production or random.uniform(0, 1) > self.exploration_rate:
             # Follow policy
             action = np.argmax(self.dqn.predict(state[np.newaxis]))
         else:
@@ -104,9 +104,10 @@ class FullyConnectedDeepQLearningAgent(Agent):
         pass
 
     def after(self):
-        self.replay(32)
+        if not self.production:
+            self.replay(self.replay_sample_size)
 
-        if self.exploration_rate > self.exploration_rate_min:
-            self.exploration_rate = self.exploration_rate * (1 - self.exploration_rate_decay)
-        else:
-            self.exploration_rate = self.exploration_rate_min
+            self.exploration_rate = max(
+                self.exploration_rate_min,
+                self.exploration_rate * (1 - self.exploration_rate_decay)
+            )

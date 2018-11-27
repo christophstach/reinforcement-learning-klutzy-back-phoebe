@@ -1,4 +1,4 @@
 from agents.qlearning import QLearningAgent
-from agents.fullyconnecteddeepqlearning import FullyConnectedDeepQLearningAgent
-from agents.convolutiondeepqlearning import ConvolutionDeepQLearningAgent
+from agents.dqldense import DQLDense
+from agents.dqlconv import DQLConv
 from agents.random import RandomAgent
