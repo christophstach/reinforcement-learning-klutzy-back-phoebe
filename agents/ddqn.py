@@ -11,7 +11,7 @@ from agents.agent import Agent
 from utils import ReplayMemory
 
 
-class DQNAgent(Agent):
+class DDQNAgent(Agent):
     def __init__(
             self,
             name,
@@ -32,7 +32,7 @@ class DQNAgent(Agent):
         self.auto_save = auto_save
         self.auto_load = auto_load
         self._name = name
-        self._model_path = 'models/{}-DQN.h5'.format(self._name)
+        self._model_path = 'models/{}-DDQN.h5'.format(self._name)
         self._state_shape = state_shape
         self._action_size = action_size
 
