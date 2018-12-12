@@ -11,6 +11,9 @@ prettytable = "*"
 tqdm = "*"
 toolz = "*"
 keras = "*"
+opencv-python = "*"
+torch = "*"
+torchvision = "*"
 
 [dev-packages]
 

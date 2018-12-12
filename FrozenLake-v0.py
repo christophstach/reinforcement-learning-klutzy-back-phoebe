@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from agents import QLearningAgent
-from utils import moving_average, clear_screen
+from utils import movingaverage, clearscreen
 
 episodes = 30000
 timesteps = 500
@@ -32,7 +32,7 @@ for episode in tqdm(range(episodes)):
     for timestep in range(timesteps):
         if simulate and episode >= episodes - 1:
             agent.production = True
-            clear_screen()
+            clearscreen()
             print('############## Episode: {}, {} ##############\n\n'.format(episode + 1, timestep + 1))
             env.render()
             time.sleep(0.25)
@@ -62,7 +62,7 @@ for episode in tqdm(range(episodes)):
 
 f, (ax1, ax2) = plt.subplots(1, 2)
 
-ax1.plot(moving_average(total_reward_history, 500))
-ax2.plot(moving_average(timesteps_history, 500))
+ax1.plot(movingaverage(total_reward_history, 500))
+ax2.plot(movingaverage(timesteps_history, 500))
 
 plt.show()
