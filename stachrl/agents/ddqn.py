@@ -7,8 +7,8 @@ from keras.layers import Dense, Activation
 from keras.models import Sequential
 from keras.optimizers import Adam
 
-from agents.agent import Agent
-from utils import ReplayMemory
+from .agent import Agent
+from ..utils import ReplayMemory
 
 
 class DDQNAgent(Agent):
@@ -24,6 +24,7 @@ class DDQNAgent(Agent):
             exploration_rate_min=0.01,
             memory_size=10000,
             replay_sample_size=32,
+            update_interval=250,
             production=False,
             auto_save=True,
             auto_load=True
@@ -32,6 +33,7 @@ class DDQNAgent(Agent):
         self.auto_save = auto_save
         self.auto_load = auto_load
         self._name = name
+
         self._model_path = 'models/{}-DDQN.h5'.format(self._name)
         self._state_shape = state_shape
         self._action_size = action_size
@@ -46,7 +48,11 @@ class DDQNAgent(Agent):
         self._memory = ReplayMemory(memory_size)
         self._replay_sample_size = replay_sample_size
 
-        self.network = self._build_model(self._model_path)
+        self.target_network = self._build_model(self._model_path)
+        self.online_network = self._build_model(self._model_path)
+
+        self._iteration = 0
+        self._update_interval = update_interval
 
     def _build_model(self, filepath):
         model = Sequential([
@@ -74,7 +80,7 @@ class DDQNAgent(Agent):
     def act(self, state):
         if self.production or random.uniform(0, 1) > self.exploration_rate:
             # Follow policy
-            action = np.argmax(self.network.predict(state[np.newaxis]))
+            action = np.argmax(self.online_network.predict(state[np.newaxis]))
         else:
             # Explore
             action = random.randrange(self._action_size)
@@ -88,7 +94,7 @@ class DDQNAgent(Agent):
             states = []
 
             for state, action, reward, next_state, done in batch:
-                target = self.network.predict(state[np.newaxis]).squeeze()
+                target = self.target_network.predict(state[np.newaxis]).squeeze()
 
                 if done:
                     target[action] = reward
@@ -96,25 +102,32 @@ class DDQNAgent(Agent):
                     target[action] = \
                         reward + \
                         self._discount_factor * \
-                        np.max(self.network.predict(next_state[np.newaxis]))
+                        np.max(self.online_network.predict(next_state[np.newaxis]))
 
                 states.append(state)
                 targets.append(target)
 
-            self.network.fit(
+            callbacks = []
+            if self.auto_save and not self.production:
+                callbacks.append(ModelCheckpoint(filepath=self._model_path))
+
+            self.target_network.fit(
                 np.array(states),
                 np.array(targets),
                 verbose=0,
                 epochs=1,
-                callbacks=[
-                    ModelCheckpoint(filepath=self._model_path) if self.auto_save and not self.production else None
-                ]
+                callbacks=callbacks
             )
+
+    def update_online_network(self):
+        self.online_network.set_weights(self.target_network.get_weights())
 
     def before(self):
         pass
 
     def after(self):
+        self._iteration += 1
+
         if not self.production:
             self.replay(self._replay_sample_size)
 
@@ -122,3 +135,12 @@ class DDQNAgent(Agent):
                 self._exploration_rate_min,
                 self.exploration_rate * (1 - self._exploration_rate_decay)
             )
+
+        if self._iteration % self._update_interval == 0:
+            self.update_online_network()
+
+    def __setattr__(self, key, value):
+        if key == 'production' and value and value != self.__dict__[key]:
+            self.update_online_network()
+
+        self.__dict__[key] = value

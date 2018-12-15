@@ -3,7 +3,7 @@ import random
 import numpy as np
 from prettytable import PrettyTable
 
-from agents.agent import Agent
+from .agent import Agent
 
 
 class QLearningAgent(Agent):

@@ -4,17 +4,15 @@ import gym
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from agents import QLearningAgent
-from utils import movingaverage, clearscreen
+from stachrl.agents import QLearningAgent
+from stachrl.utils import movingaverage, clearscreen
 
-episodes = 30000
-timesteps = 500
+episodes = 9000
+timesteps = 100
 simulate = True
 
-env_name = 'FrozenLake-v0'
+env_name = 'Taxi-v2'
 env = gym.make(env_name)
-env._max_episode_steps = timesteps
-
 agent = QLearningAgent(
     name=env_name,
     state_space=env.observation_space,
@@ -35,7 +33,7 @@ for episode in tqdm(range(episodes)):
             clearscreen()
             print('############## Episode: {}, {} ##############\n\n'.format(episode + 1, timestep + 1))
             env.render()
-            time.sleep(0.25)
+            time.sleep(1.5)
 
         action = agent.act(state)
 

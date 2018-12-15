@@ -5,8 +5,8 @@ import gym
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from agents import DDQNAgent
-from utils import movingaverage
+from stachrl.agents import DQNAgent
+from stachrl.utils import movingaverage
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -18,7 +18,7 @@ env_name = 'CartPole-v0'
 env = gym.make(env_name)
 env._max_episode_steps = timesteps
 
-agent = DDQNAgent(
+agent = DQNAgent(
     name=env_name,
     state_shape=env.observation_space.shape,
     action_size=env.action_space.n,

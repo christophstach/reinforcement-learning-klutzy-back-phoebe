@@ -14,6 +14,7 @@ keras = "*"
 opencv-python = "*"
 torch = "*"
 torchvision = "*"
+jupyter = "*"
 
 [dev-packages]
 

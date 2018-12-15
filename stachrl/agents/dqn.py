@@ -7,8 +7,8 @@ from keras.layers import Dense, Activation
 from keras.models import Sequential
 from keras.optimizers import Adam
 
-from agents.agent import Agent
-from utils import ReplayMemory
+from .agent import Agent
+from ..utils import ReplayMemory
 
 
 class DQNAgent(Agent):
@@ -101,14 +101,16 @@ class DQNAgent(Agent):
                 states.append(state)
                 targets.append(target)
 
+            callbacks = []
+            if self.auto_save and not self.production:
+                callbacks.append(ModelCheckpoint(filepath=self._model_path))
+
             self.network.fit(
                 np.array(states),
                 np.array(targets),
                 verbose=0,
                 epochs=1,
-                callbacks=[
-                    ModelCheckpoint(filepath=self._model_path) if self.auto_save and not self.production else None
-                ]
+                callbacks=callbacks
             )
 
     def before(self):
