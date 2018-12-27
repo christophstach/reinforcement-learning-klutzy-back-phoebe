@@ -8,17 +8,53 @@ from tqdm import tqdm
 from stachrl.agents import DQNAgent
 from stachrl.utils import movingaverage
 
+from keras.layers import Dense, Activation, Conv2D, Flatten, LSTM, TimeDistributed
+from keras.models import Sequential
+from keras.optimizers import Adam
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 episodes = 500
 timesteps = 2000
 simulate = True
 
-env_name = 'CartPole-v0'
+env_name = 'Breakout-v0'
 env = gym.make(env_name)
 env._max_episode_steps = timesteps
 
-agent = DQNAgent(
+
+class BreakoutAgent(DQNAgent):
+    def _build_model(self, filepath):
+        model = Sequential([
+            Conv2D(filters=16, kernel_size=3, input_shape=self._state_shape),
+            Activation('relu'),
+
+            Conv2D(filters=16, kernel_size=3),
+            Activation('relu'),
+
+            Conv2D(filters=16, kernel_size=3),
+            Activation('relu'),
+
+            TimeDistributed(Flatten()),
+
+            LSTM(24),
+
+            Dense(24),
+            Activation('relu'),
+
+            Dense(self._action_size),
+            Activation('linear')
+        ])
+
+        model.compile(loss='mse', optimizer=Adam(lr=self._learning_rate))
+
+        if self.auto_load and os.path.isfile(filepath):
+            model.load_weights(filepath)
+
+        return model
+
+
+agent = BreakoutAgent(
     name=env_name,
     state_shape=env.observation_space.shape,
     action_size=env.action_space.n,
@@ -50,7 +86,6 @@ for episode in iterator:
         action = agent.act(state)
 
         next_state, reward, done, info = env.step(action)
-        reward = reward - abs(next_state[0])
 
         agent.remember(state, action, reward, next_state, done)
 

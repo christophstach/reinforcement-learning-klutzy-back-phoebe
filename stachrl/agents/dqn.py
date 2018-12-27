@@ -74,7 +74,7 @@ class DQNAgent(Agent):
     def act(self, state):
         if self.production or random.uniform(0, 1) > self.exploration_rate:
             # Follow policy
-            action = np.argmax(self.network.predict(state[np.newaxis]))
+            action = np.argmax(self.network.predict(np.expand_dims(state, axis=0)))
         else:
             # Explore
             action = random.randrange(self._action_size)
@@ -88,7 +88,7 @@ class DQNAgent(Agent):
             states = []
 
             for state, action, reward, next_state, done in batch:
-                target = self.network.predict(state[np.newaxis]).squeeze()
+                target = self.network.predict(np.expand_dims(state, axis=0)).squeeze()
 
                 if done:
                     target[action] = reward
@@ -96,7 +96,7 @@ class DQNAgent(Agent):
                     target[action] = \
                         reward + \
                         self._discount_factor * \
-                        np.max(self.network.predict(next_state[np.newaxis]))
+                        np.max(self.network.predict(np.expand_dims(next_state, axis=0)))
 
                 states.append(state)
                 targets.append(target)

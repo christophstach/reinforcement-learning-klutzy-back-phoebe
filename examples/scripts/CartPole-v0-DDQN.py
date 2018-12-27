@@ -10,7 +10,7 @@ from stachrl.utils import movingaverage
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-episodes = 1
+episodes = 500
 timesteps = 2000
 simulate = True
 
@@ -23,7 +23,9 @@ agent = DDQNAgent(
     state_shape=env.observation_space.shape,
     action_size=env.action_space.n,
     exploration_rate_decay=0.005,
-    memory_size=2500
+    memory_size=2500,
+    auto_save=False,
+    auto_load=False
 )
 
 total_reward_history = []
